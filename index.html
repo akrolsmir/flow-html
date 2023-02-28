@@ -1,0 +1,82 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div class="flex flex-row p-8 w-full gap-8">
+      <div class="flex-1">
+        <div class="text-gray-500">Create a React component</div>
+        <textarea
+          id="inputarea"
+          rows="10"
+          class="border border-gray-300 rounded p-2 w-full font-mono text-sm"
+        ></textarea>
+        <div
+          id="output"
+          class="text-sm font-mono text-blue-700 whitespace-pre"
+        ></div>
+      </div>
+      <div class="flex-1">
+        <div id="react"></div>
+      </div>
+    </div>
+  </body>
+
+  <!-- TODO: React.useState doesn't work due to rules of hooks... -->
+
+  <script>
+    const DEFAULT = `function Header() { return <h1 class="text-green-500">hi</h1> }`;
+    document.getElementById("inputarea").innerText = DEFAULT;
+    rerender(DEFAULT);
+
+    const textarea = document.getElementById("inputarea");
+    let input = "";
+    textarea.addEventListener("input", (e) => {
+      console.log(e.target.value);
+      input = e.target.value;
+      // Run it through bablify, and then set it in div#output
+      rerender(input);
+    });
+
+    function rerender(input) {
+      let output = babelify(input);
+      document.getElementById("output").innerText = output;
+
+      loadModule(output).then((loaded) => {
+        console.log("loaded", loaded);
+        ReactDOM.render(loaded(), document.getElementById("react"));
+      });
+    }
+
+    // Code should be a functional component
+    async function loadModule(code) {
+      const encodedJs = encodeURIComponent(code);
+      const dataUri = "data:text/javascript;charset=utf-8," + encodedJs;
+      const loaded = await import(dataUri);
+      return loaded.default;
+    }
+
+    function babelify(input) {
+      const moduleInput = "export default " + input;
+      const output = Babel.transform(moduleInput, {
+        presets: [
+          // `modules: false` creates a module that can be imported
+          // ["env", { modules: false }],
+          "react",
+        ],
+      }).code;
+      return output;
+    }
+  </script>
+</html>
