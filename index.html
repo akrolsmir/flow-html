@@ -13,6 +13,8 @@
     ></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/prettier@2.8.4/standalone.js"></script>
+    <script src="https://unpkg.com/prettier@2.8.4/parser-babel.js"></script>
   </head>
   <body>
     <div class="flex flex-row p-8 w-full gap-8">
@@ -21,17 +23,25 @@
         <textarea
           id="inputarea"
           rows="10"
-          class="border border-gray-300 rounded p-2 w-full font-mono text-sm"
+          class="border border-gray-300 rounded p-2 w-full font-mono text-sm whitespace-pre-wrap"
         ></textarea>
-        <button
-          class="bg-blue-500 text-white rounded p-2 my-2"
-          onclick="saveSnippet()"
-        >
-          Save snippet
-        </button>
+        <div class="flex flex-row gap-2">
+          <button
+            class="bg-blue-500 text-white rounded p-2 my-2"
+            onclick="saveSnippet()"
+          >
+            Save snippet
+          </button>
+          <button
+            class="bg-gray-200 text-gray-700 rounded p-2 my-2"
+            onclick="reformat()"
+          >
+            Prettier
+          </button>
+        </div>
         <div
           id="output"
-          class="text-sm font-mono text-blue-700 whitespace-pre"
+          class="text-sm font-mono text-blue-700 whitespace-pre-wrap"
         ></div>
       </div>
       <div class="flex-1">
@@ -49,24 +59,21 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzcnlscnh6YXlpb3JuZW94eHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzc1MjYwNzcsImV4cCI6MTk5MzEwMjA3N30.JdS9rSIzzQU5S0YkT_Szj7Gtf6GblUirCHxcYAsorCM'
     )
     let snippets = []
-    let input = DEFAULT
-    listSnippets().then((data) => {
-      snippets = data
-      console.log('snippets', snippets)
-    })
-    document.getElementById('inputarea').innerText = input
-    rerender()
+    let code = DEFAULT
 
-    const textarea = document.getElementById('inputarea')
-    textarea.addEventListener('input', (e) => {
+    const editor = document.getElementById('inputarea')
+    editor.value = code
+    editor.addEventListener('input', (e) => {
       console.log(e.target.value)
-      input = e.target.value
+      code = e.target.value
       // Run it through bablify, and then set it in div#output
       rerender()
     })
+    rerender()
+    loadAll()
 
     function rerender() {
-      let output = babelify(input)
+      let output = babelify(code)
       document.getElementById('output').innerText = output
 
       loadModule(output).then((loaded) => {
@@ -102,7 +109,24 @@
     }
 
     async function saveSnippet() {
-      await db.from('snippets').insert({ code: input })
+      await db.from('snippets').insert({ code: code })
+    }
+
+    async function loadAll() {
+      snippets = await listSnippets()
+      for (const snippet of snippets) {
+        console.log('loading', snippet.code)
+        await loadModule(babelify(snippet.code))
+      }
+      console.log(`${snippets.length} snippets loaded`)
+      // TODO: Allow current snippet to reference other code
+    }
+
+    function reformat() {
+      editor.value = prettier.format(code, {
+        parser: 'babel',
+        plugins: prettierPlugins,
+      })
     }
   </script>
 </html>
