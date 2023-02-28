@@ -12,6 +12,7 @@
       src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
     ></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <div class="flex flex-row p-8 w-full gap-8">
@@ -22,6 +23,12 @@
           rows="10"
           class="border border-gray-300 rounded p-2 w-full font-mono text-sm"
         ></textarea>
+        <button
+          class="bg-blue-500 text-white rounded p-2 my-2"
+          onclick="saveSnippet()"
+        >
+          Save snippet
+        </button>
         <div
           id="output"
           class="text-sm font-mono text-blue-700 whitespace-pre"
@@ -36,26 +43,35 @@
   <!-- TODO: React.useState doesn't work due to rules of hooks... -->
 
   <script>
-    const DEFAULT = `function Header() { return <h1 class="text-green-500">hi</h1> }`;
-    document.getElementById("inputarea").innerText = DEFAULT;
-    rerender(DEFAULT);
+    const DEFAULT = `export function Header() { return <h1 class="text-green-500">hi</h1> }`;
+    const db = supabase.createClient(
+      "https://zsrylrxzayiorneoxxqy.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzcnlscnh6YXlpb3JuZW94eHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzc1MjYwNzcsImV4cCI6MTk5MzEwMjA3N30.JdS9rSIzzQU5S0YkT_Szj7Gtf6GblUirCHxcYAsorCM"
+    );
+    let snippets = [];
+    let input = DEFAULT;
+    listSnippets().then((data) => {
+      snippets = data;
+      console.log("snippets", snippets);
+    });
+    document.getElementById("inputarea").innerText = input;
+    rerender();
 
     const textarea = document.getElementById("inputarea");
-    let input = "";
     textarea.addEventListener("input", (e) => {
       console.log(e.target.value);
       input = e.target.value;
       // Run it through bablify, and then set it in div#output
-      rerender(input);
+      rerender();
     });
 
-    function rerender(input) {
+    function rerender() {
       let output = babelify(input);
       document.getElementById("output").innerText = output;
 
       loadModule(output).then((loaded) => {
         console.log("loaded", loaded);
-        ReactDOM.render(loaded(), document.getElementById("react"));
+        ReactDOM.render(loaded.Header(), document.getElementById("react"));
       });
     }
 
@@ -64,11 +80,11 @@
       const encodedJs = encodeURIComponent(code);
       const dataUri = "data:text/javascript;charset=utf-8," + encodedJs;
       const loaded = await import(dataUri);
-      return loaded.default;
+      return loaded;
     }
 
     function babelify(input) {
-      const moduleInput = "export default " + input;
+      const moduleInput = input;
       const output = Babel.transform(moduleInput, {
         presets: [
           // `modules: false` creates a module that can be imported
@@ -77,6 +93,16 @@
         ],
       }).code;
       return output;
+    }
+
+    // Snippet: {id, created_at, code}
+    async function listSnippets() {
+      const { data, error } = await db.from("snippets").select("*");
+      return data;
+    }
+
+    async function saveSnippet() {
+      await db.from("snippets").insert({ code: input });
     }
   </script>
 </html>
