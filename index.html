@@ -43,66 +43,66 @@
   <!-- TODO: React.useState doesn't work due to rules of hooks... -->
 
   <script>
-    const DEFAULT = `export function Header() { return <h1 class="text-green-500">hi</h1> }`;
+    const DEFAULT = `export function Header() { return <h1 class="text-green-500">hi</h1> }`
     const db = supabase.createClient(
-      "https://zsrylrxzayiorneoxxqy.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzcnlscnh6YXlpb3JuZW94eHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzc1MjYwNzcsImV4cCI6MTk5MzEwMjA3N30.JdS9rSIzzQU5S0YkT_Szj7Gtf6GblUirCHxcYAsorCM"
-    );
-    let snippets = [];
-    let input = DEFAULT;
+      'https://zsrylrxzayiorneoxxqy.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzcnlscnh6YXlpb3JuZW94eHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzc1MjYwNzcsImV4cCI6MTk5MzEwMjA3N30.JdS9rSIzzQU5S0YkT_Szj7Gtf6GblUirCHxcYAsorCM'
+    )
+    let snippets = []
+    let input = DEFAULT
     listSnippets().then((data) => {
-      snippets = data;
-      console.log("snippets", snippets);
-    });
-    document.getElementById("inputarea").innerText = input;
-    rerender();
+      snippets = data
+      console.log('snippets', snippets)
+    })
+    document.getElementById('inputarea').innerText = input
+    rerender()
 
-    const textarea = document.getElementById("inputarea");
-    textarea.addEventListener("input", (e) => {
-      console.log(e.target.value);
-      input = e.target.value;
+    const textarea = document.getElementById('inputarea')
+    textarea.addEventListener('input', (e) => {
+      console.log(e.target.value)
+      input = e.target.value
       // Run it through bablify, and then set it in div#output
-      rerender();
-    });
+      rerender()
+    })
 
     function rerender() {
-      let output = babelify(input);
-      document.getElementById("output").innerText = output;
+      let output = babelify(input)
+      document.getElementById('output').innerText = output
 
       loadModule(output).then((loaded) => {
-        console.log("loaded", loaded);
-        ReactDOM.render(loaded.Header(), document.getElementById("react"));
-      });
+        console.log('loaded', loaded)
+        ReactDOM.render(loaded.Header(), document.getElementById('react'))
+      })
     }
 
     // Code should be a functional component
     async function loadModule(code) {
-      const encodedJs = encodeURIComponent(code);
-      const dataUri = "data:text/javascript;charset=utf-8," + encodedJs;
-      const loaded = await import(dataUri);
-      return loaded;
+      const encodedJs = encodeURIComponent(code)
+      const dataUri = 'data:text/javascript;charset=utf-8,' + encodedJs
+      const loaded = await import(dataUri)
+      return loaded
     }
 
     function babelify(input) {
-      const moduleInput = input;
+      const moduleInput = input
       const output = Babel.transform(moduleInput, {
         presets: [
           // `modules: false` creates a module that can be imported
           // ["env", { modules: false }],
-          "react",
+          'react',
         ],
-      }).code;
-      return output;
+      }).code
+      return output
     }
 
     // Snippet: {id, created_at, code}
     async function listSnippets() {
-      const { data, error } = await db.from("snippets").select("*");
-      return data;
+      const { data, error } = await db.from('snippets').select('*')
+      return data
     }
 
     async function saveSnippet() {
-      await db.from("snippets").insert({ code: input });
+      await db.from('snippets').insert({ code: input })
     }
   </script>
 </html>
