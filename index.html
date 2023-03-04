@@ -53,13 +53,16 @@
   <!-- TODO: React.useState doesn't work due to rules of hooks... -->
 
   <script>
-    const DEFAULT = `export function Header() { return <h1 class="text-green-500">hi</h1> }`
+    const DEFAULT = `export default function Page() {
+  return <div class="text-sm">hi</div>;
+}`
     const db = supabase.createClient(
       'https://zsrylrxzayiorneoxxqy.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpzcnlscnh6YXlpb3JuZW94eHF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzc1MjYwNzcsImV4cCI6MTk5MzEwMjA3N30.JdS9rSIzzQU5S0YkT_Szj7Gtf6GblUirCHxcYAsorCM'
     )
     let snippets = []
     let code = DEFAULT
+    const X = {}
 
     const editor = document.getElementById('inputarea')
     editor.value = code
@@ -78,7 +81,7 @@
 
       loadModule(output).then((loaded) => {
         console.log('loaded', loaded)
-        ReactDOM.render(loaded.Header(), document.getElementById('react'))
+        ReactDOM.render(loaded.default(), document.getElementById('react'))
       })
     }
 
@@ -96,7 +99,7 @@
         presets: [
           // `modules: false` creates a module that can be imported
           // ["env", { modules: false }],
-          'react',
+          ['react', { pure: false }],
         ],
       }).code
       return output
@@ -116,7 +119,8 @@
       snippets = await listSnippets()
       for (const snippet of snippets) {
         console.log('loading', snippet.code)
-        await loadModule(babelify(snippet.code))
+        const module = await loadModule(babelify(snippet.code))
+        Object.assign(X, module)
       }
       console.log(`${snippets.length} snippets loaded`)
       // TODO: Allow current snippet to reference other code
