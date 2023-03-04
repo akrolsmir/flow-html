@@ -78,9 +78,8 @@
     function rerender() {
       let output = babelify(code)
       document.getElementById('output').innerText = output
-
       loadModule(output).then((loaded) => {
-        root.render(loaded.default())
+        root.render(React.createElement(loaded.default))
       })
     }
 
