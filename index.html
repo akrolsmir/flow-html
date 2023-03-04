@@ -63,11 +63,11 @@
     let snippets = []
     let code = DEFAULT
     const X = {}
+    const root = ReactDOM.createRoot(document.getElementById('react'))
 
     const editor = document.getElementById('inputarea')
     editor.value = code
     editor.addEventListener('input', (e) => {
-      console.log(e.target.value)
       code = e.target.value
       // Run it through bablify, and then set it in div#output
       rerender()
@@ -80,8 +80,7 @@
       document.getElementById('output').innerText = output
 
       loadModule(output).then((loaded) => {
-        console.log('loaded', loaded)
-        ReactDOM.render(loaded.default(), document.getElementById('react'))
+        root.render(loaded.default())
       })
     }
 
